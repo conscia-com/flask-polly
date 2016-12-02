@@ -38,7 +38,6 @@ def texttospeech():
         soundResult = resultVoice['AudioStream']
         with open('static/sound.mp3', 'wb') as handle:
             handle.write(soundResult.read())
-        #returnTag = True
         resultVoice = None
         soundResult = None
         return render_template('inserttext.html', returnTag = True)
