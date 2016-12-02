@@ -3,12 +3,7 @@ from flask import Flask
 from flask import request
 from flask import render_template
 from flask.json import jsonify
-from pprint import pprint
-import os.path
-import random
-import json
 import boto3
-import os
 
 
 # This sets a directory for static files since Apache and Nginx aren't used
