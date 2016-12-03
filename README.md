@@ -6,6 +6,8 @@ Newest versions of:
 * boto3
 * flask
 
+Be aware that this python app requires AWS credentials on the machine. See the documentation for AWS CLI on how to set up your credentials: http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html
+
 
 # Howto
 In order to run Flask you must have the requirements installed on the computer. See section above. Then you start the application from the console by typing in:
