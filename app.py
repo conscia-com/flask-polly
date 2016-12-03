@@ -1,46 +1,66 @@
 #!flask/bin/python
-from flask import Flask
+from flask import Flask, send_file, redirect, session
 from flask import request
 from flask import render_template
-from flask.json import jsonify
+import tempfile
 import boto3
+import os
+import httplib
 
 
 # This sets a directory for static files since Apache and Nginx aren't used
 app = Flask(__name__, static_url_path='/static')
 
+# Make sessions work
+app.secret_key = '\x8b@\xbc\xa8(\xd2\x1a\xd4~\x99\xe1\xfa\xaf\xee\x0f\xed\x07\xd0X\xdb\xfb\xbf\x82\x11'
 
 # AWS Polly is set here. It requires the newest version of Boto3
 polly = boto3.client('polly')
 
-
 # Just a placeholder
 @app.route('/')
 def index():
-    return 'This server hosts different API endpoints.'
+    return redirect("/inserttext")
 
 
 # This generates the primary site used where text is inputted
-@app.route('/inserttext/', methods=['GET'])
+@app.route('/inserttext/', methods=['GET', 'POST'])
 def renderinserttext_page():
+
+    if request.method == 'POST':
+        if "texttospeech" in request.form and request.form["texttospeech"] != "":
+            sentence = request.form["texttospeech"]
+            session['sentence'] = sentence
+
     return render_template('inserttext.html')
 
 
-#  A POST is sent and handled in this function
-@app.route('/inserttext/', methods=['POST'])
-def texttospeech():
-    if request.form["texttospeech"] == "":
-# If there is no text inputtet in the field, it will set the returnTag to False
-        return render_template('inserttext.html', returnTag = False)
-    else:
-# If the textfield contains data, it will save the sound to the disk to make it available for the webpage.
-        resultVoice = ConvertTextToVoice(request.form["texttospeech"], 'Naja')
-        soundResult = resultVoice['AudioStream']
-        with open('static/sound.mp3', 'wb') as handle:
-            handle.write(soundResult.read())
-        resultVoice = None
-        soundResult = None
-        return render_template('inserttext.html', returnTag = True)
+@app.route('/say.mp3', methods=['GET'])
+def say():
+    sentence = session.pop("sentence", None)
+    if sentence is None:
+        return (httplib.NO_CONTENT, 204) # sentence not set
+
+    resultVoice = ConvertTextToVoice(sentence, 'Naja')
+    soundResult = resultVoice['AudioStream']
+
+    f = tempfile.TemporaryFile()
+    f.write(soundResult.read())
+
+    response = send_file(f, as_attachment=True,
+                         attachment_filename='say.mp3',
+                         add_etags=False)
+
+    f.seek(0, os.SEEK_END)
+    size = f.tell()
+    f.seek(0)
+
+    response.headers.extend({
+        'Content-Length': size,
+        'Cache-Control': 'no-cache'
+    })
+
+    return response
 
 
 # The text is sent to AWS Polly and a StreamObject is returned
