@@ -12,7 +12,7 @@ import httplib
 app = Flask(__name__, static_url_path='/static')
 
 # Make sessions work
-app.secret_key = '\x8b@\xbc\xa8(\xd2\x1a\xd4~\x99\xe1\xfa\xaf\xee\x0f\xed\x07\xd0X\xdb\xfb\xbf\x82\x11'
+app.secret_key = os.urandom(24)
 
 # AWS Polly is set here. It requires the newest version of Boto3
 polly = boto3.client('polly')
